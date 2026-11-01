@@ -86,7 +86,10 @@ async function proxied(u){for(let i=0;i<PROX.length;i++){const k=(pi+i)%PROX.len
 const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.replace(/\s+/g,' ').trim()};
 function feeds(l){const q=l=='hi'?'hl=hi&gl=IN&ceid=IN:hi':'hl=en-IN&gl=IN&ceid=IN:en',b='https://news.google.com/rss';return[b+'?'+q,b+'/headlines/section/topic/NATION?'+q,b+'/headlines/section/topic/WORLD?'+q,b+'/search?q='+(l=='hi'?'राजनीति':'politics+India')+'&'+q]}
 let seen=new Set(JSON.parse(LS.snr_seen||'[]')),news=[],breakQ=[],first=true;
-async function refresh(){const l=$('lang').value;let got=[];
+let desk=[],played=new Set(JSON.parse(LS.snr_desk||'[]'));
+async function loadDesk(){try{const a=JSON.parse(await tget('feed.json?t='+Date.now()));desk=a.filter(x=>x&&x.title&&!played.has(x.title+'|'+x.time)).sort((a,b)=>new Date(b.time)-new Date(a.time))}catch(e){}}
+function deskItem(){const d=desk.shift();if(!d)return null;played.add(d.title+'|'+d.time);LS.snr_desk=JSON.stringify([...played].slice(-300));return{seg:'DESK',title:'From our desk: '+d.title,src:d.source||'Desk',lang:$('lang').value,text:d.text||''}}
+async function refresh(){loadDesk();const l=$('lang').value;let got=[];
  const rs=await Promise.allSettled(feeds(l).map(proxied));
  rs.forEach(r=>{if(r.status!='fulfilled')return;const x=new DOMParser().parseFromString(r.value,'text/xml');x.querySelectorAll('item').forEach(i=>{let t=i.querySelector('title')?.textContent||'',s=i.querySelector('source')?.textContent||'';t=t.replace(/ - [^-]+$/,'');let d=strip(i.querySelector('description')?.textContent).replace(t,'').replace(s,'').trim();got.push({title:t,src:s,sum:d.length>40?d:'',date:new Date(i.querySelector('pubDate')?.textContent||0).getTime(),lang:l})})});
  if(!got.length){try{const n=new Date(),j=JSON.parse(await tget(`https://en.wikipedia.org/api/rest_v1/feed/featured/${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`));(j.news||[]).forEach(x=>got.push({title:strip(x.story),src:'Wikipedia In the news',sum:'',date:0,lang:'en'}))}catch(e){}}
@@ -113,14 +116,14 @@ const sents=t=>(t.match(/[^.!?।]+[.!?।]+["')\]]*|[^.!?।]+$/g)||[t]).map(s=
 let running=false,cur=null,tok=0,ctx;
 function tone(br){try{ctx=ctx||new AudioContext();(br?[880,660,880,660]:[523,659,784]).forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.22;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.start(t);o.stop(t+.21)})}catch(e){}}
 function say(s,l,k){return new Promise(res=>{if(k!=tok)return res();const u=new SpeechSynthesisUtterance(s);u.lang=l=='hi'?'hi-IN':'en-IN';const v=voiceFor(l);if(v)u.voice=v;u.rate=.95;let d=0;const f=()=>{if(!d){d=1;clearTimeout(w);res()}};u.onend=f;u.onerror=f;const w=setTimeout(f,4000+s.length*120);speechSynthesis.speak(u)})}
-async function play(it){const k=++tok;cur=it;$('seg').textContent=it.seg;$('seg').className=it.seg;$('title').textContent=it.title.toUpperCase();$('src').textContent=it.src||'';$('txl').classList.toggle('on',it.seg=='BREAKING');$('st').textContent='📻 on air';
+async function play(it){const k=++tok;cur=it;$('seg').textContent=it.seg=='DESK'?'FROM OUR DESK':it.seg;$('seg').className=it.seg;$('title').textContent=it.title.toUpperCase();$('src').textContent=it.src||'';$('txl').classList.toggle('on',it.seg=='BREAKING');$('st').textContent='📻 on air';
  tone(it.seg=='BREAKING');await sleep(900);$('story').innerHTML='';const add=t=>{const d=document.createElement('div');d.textContent=t;$('story').appendChild(d);$('story').scrollTop=1e9};
  for(const s of sents(it.title+'. '+it.text)){if(k!=tok||!running)return false;add(s);await say(s,it.lang,k);for(let i=0;i<30&&k==tok&&running;i++)await sleep(100)}return k==tok}
 function interrupt(){tok++;speechSynthesis.cancel()}
 const ID={en:'You are listening to Sanket News Radio. Nonstop news and stories, all day.',hi:'आप सुन रहे हैं संकेत न्यूज़ रेडियो। लगातार समाचार और कहानियाँ।'};
 let nextStory=null;const prep=()=>{nextStory=story()};
 async function loop(){let step=0;prep();while(running){if(breakQ.length){const g=breakQ.shift(),hi=$('lang').value=='hi';await play({seg:'BREAKING',title:hi?'ब्रेकिंग न्यूज़':'Breaking news',src:g.src,lang:g.lang,text:(hi?'हम यह खबर बीच में रोककर दे रहे हैं। ':'We interrupt this programme with breaking news. ')+g.title+'. '+(g.sum||'')+(hi?' अब हम कार्यक्रम पर लौटते हैं।':' We now return to our programme.')});continue}
- const p=step%3;let it;if(p==0)it={seg:'NEWS',title:'Station ID',src:'',lang:$('lang').value,text:ID[$('lang').value]};else if(p==1)it=bulletin()||await nextStory;else{it=await nextStory;prep()}
+ const p=step%3;let it;if(p==0)it={seg:'NEWS',title:'Station ID',src:'',lang:$('lang').value,text:ID[$('lang').value]};else if(p==1)it=bulletin()||await nextStory;else{const d=deskItem();if(d)it=d;else{it=await nextStory;prep()}}
  const ok=await play(it);if(ok||!running||p==0)step++;else if(p==2){/* interrupted story: resume by replaying */}}}
 $('start').onclick=async()=>{if(running){running=false;interrupt();$('start').textContent='▶ START RADIO';$('rxl').classList.remove('on');return}
  running=true;$('start').textContent='■ STOP';$('rxl').classList.add('on');speechSynthesis.speak(new SpeechSynthesisUtterance(''));
