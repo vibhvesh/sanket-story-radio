@@ -94,7 +94,7 @@ async function gen(topic,lang){const p=prompt(topic,lang),e=$('engine').value;le
  try{if(e=='grok'){if(!$('kx').value)throw Error('no xAI key');t=await chat('https://api.x.ai/v1/chat/completions',$('kx').value.trim(),'grok-3-mini',p)}
   else if(e=='openai'){if(!$('ko').value)throw Error('no OpenAI key');t=await chat('https://api.openai.com/v1/chat/completions',$('ko').value.trim(),'gpt-4o-mini',p)}}
  catch(x){note('⚠ '+e+' failed ('+x.message+') — using free engine')}
- if(!t){try{t=await free(p)}catch(x){for(let i=0;i<2&&!t;i++){.textContent='⏳ free engine busy, retrying…';await new Promise(r=>setTimeout(r,16000));try{t=await free(p)}catch(y){}}}}
+ if(!t){try{t=await free(p)}catch(x){for(let i=0;i<2&&!t;i++){$('st').textContent='⏳ free engine busy, retrying…';await new Promise(r=>setTimeout(r,16000));try{t=await free(p)}catch(y){}}}}
  if(!t){{note($('note').textContent+' ⚠ free engine failed — playing a built-in story');const f=FALL[lang][Math.floor(Math.random()*3)];return {title:f[0],text:f[1]}}}
  t=t.replace(/[*#_]/g,'').trim();const ls=t.split('\n').filter(s=>s.trim());return {title:ls[0].replace(/^title:\s*/i,'').slice(0,60),text:ls.slice(1).join('\n\n')||ls[0]}}
 let running=false,queue=[],speaking=false,busy=false;
