@@ -94,7 +94,8 @@ async function gen(topic,lang){const p=prompt(topic,lang),e=$('engine').value;le
  try{if(e=='grok'){if(!$('kx').value)throw Error('no xAI key');t=await chat('https://api.x.ai/v1/chat/completions',$('kx').value.trim(),'grok-3-mini',p)}
   else if(e=='openai'){if(!$('ko').value)throw Error('no OpenAI key');t=await chat('https://api.openai.com/v1/chat/completions',$('ko').value.trim(),'gpt-4o-mini',p)}}
  catch(x){note('⚠ '+e+' failed ('+x.message+') — using free engine')}
- if(!t){try{t=await free(p)}catch(x){note('⚠ free engine failed — playing a built-in story');const f=FALL[lang][Math.floor(Math.random()*3)];return {title:f[0],text:f[1]}}}
+ if(!t){try{t=await free(p)}catch(x){try{await new Promise(r=>setTimeout(r,5000));t=await free(p)}catch(y){}}}
+ if(!t){{note($('note').textContent+' ⚠ free engine failed — playing a built-in story');const f=FALL[lang][Math.floor(Math.random()*3)];return {title:f[0],text:f[1]}}}
  t=t.replace(/[*#_]/g,'').trim();const ls=t.split('\n').filter(s=>s.trim());return {title:ls[0].replace(/^title:\s*/i,'').slice(0,60),text:ls.slice(1).join('\n\n')||ls[0]}}
 let running=false,queue=[],speaking=false,busy=false;
 function voiceFor(l){const v=speechSynthesis.getVoices();return v.find(x=>x.lang.startsWith(l=='hi'?'hi':'en-IN'))||v.find(x=>x.lang.startsWith(l))}
@@ -103,7 +104,7 @@ function speak(s){return new Promise(res=>{speechSynthesis.cancel();const u=new 
 async function loop(){while(running){let s=queue.shift();if(!s){busy=true;$('st').textContent='✍ writing a story…';const l=$('lang').value;s=await gen(TOP[l][Math.floor(Math.random()*8)],l);s.lang=l;busy=false;if(queue.length){queue.push(s);continue}}
  show(s);if($('bc').checked&&!s.remote)pub(s);$('rxl').classList.add('on');speaking=true;await speak(s);speaking=false;$('rxl').classList.remove('on');await new Promise(r=>setTimeout(r,1500))}}
 function show(s){$('title').textContent=s.title.toUpperCase();$('story').textContent=s.title+'\n\n'+s.text;$('st').textContent=(s.req?'🎙 by request: '+s.req:'📻 on air')+(s.remote?' (from channel)':'')}
-async function request(q){q=(q||'').trim();if(!q)return;const l=$('lang').value;$('st').textContent='✍ writing your story: '+q;note('');const s=await gen(q,l);s.lang=l;s.req=q;queue.unshift(s);
+async function request(q){q=(q||'').trim();if(!q)return;const l=$('lang').value;$('st').textContent='✍ writing your story: '+q;note('');while(busy)await new Promise(r=>setTimeout(r,500));busy=true;const s=await gen(q,l);busy=false;s.lang=l;s.req=q;queue.unshift(s);
  if(!running){running=true;loop()}else{speechSynthesis.cancel()} return s}
 window.request=request;
 $('start').onclick=()=>{if(running){running=false;speechSynthesis.cancel();$('start').textContent='▶ START RADIO';$('st').textContent='stopped';return}running=true;$('start').textContent='■ STOP RADIO';loop()};
