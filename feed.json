@@ -1,1 +1,86 @@
-[{"title":"Sample desk item","text":"This is a sample item from our desk. Real updates from monitoring bots will appear here.","source":"Sanket Desk (sample)","time":"2026-11-01T08:00:00Z","sample":true}]
+[
+ {
+  "title": "INDIA bloc marches to Ramlila Maidan",
+  "text": "The opposition INDIA bloc held its Chalo Dilli march in Delhi today, starting at noon. The march targets Chief Election Commissioner Gyanesh Kumar over the voter-list revision known as SIR, which the opposition says wrongly removed voters. Around ten thousand police and paramilitary personnel were deployed along the route.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "BJP launches padyatra in Rohtak",
+  "text": "On the BJP side, party president Nitin Nabin is leading a padyatra in Rohtak, Haryana. The march carries the slogan Loktantra Bachao, Arajakta Hatao.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Rahul Gandhi questions the 2024 mandate",
+  "text": "Rahul Gandhi said that the deletion of one in seven voters shows the 2024 election was illegitimate. He also urged people attending the rally to shop at local stores this festive season.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Congress cites Karnataka voter cuts",
+  "text": "Congress says eighty lakh genuine voters were removed from Karnataka's final SIR list. The Election Commission has said removals relate to dead or duplicate entries.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "BJP dismisses opposition rally",
+  "text": "The BJP called the opposition rally a joke on social media. The party also recalled the anti-Sikh riots of 1984, which began on the first of November, and blamed Congress leaders.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Azam Khan bailed, then detained by ED",
+  "text": "Samajwadi Party leader Azam Khan received bail from the Allahabad High Court and left Rampur jail. He was detained by the Enforcement Directorate soon after. Akhilesh Yadav called the cases a cowardly conspiracy.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Yogi thanks Centre on UP formation day",
+  "text": "Uttar Pradesh Chief Minister Yogi Adityanath posted formation-day wishes for the state. He thanked the Centre for an early tax devolution of over nineteen thousand crore rupees and flagged voters he says are missing from the rolls.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "AAP targets Amit Shah over Manipur",
+  "text": "The Aam Aadmi Party asked whether Home Minister Amit Shah should resign over the situation in Manipur.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Rift in National Conference",
+  "text": "In Jammu and Kashmir, a rebellion is reported among National Conference MLAs. MP Ruhullah Mehdi plans to resign on the third of November.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Fake claim on RSS ban spreads",
+  "text": "A viral claim that Tamil Nadu has banned the RSS is false. Listeners are advised to verify such posts before sharing.",
+  "source": "Xbot",
+  "time": "2026-11-01T08:00:00+05:30"
+ },
+ {
+  "title": "Akhilesh joins rally, challenges Yogi",
+  "text": "Akhilesh Yadav marched alongside Rahul Gandhi, Mamata Banerjee and Tejashwi Yadav at the Vote Bachao, Desh Bachao rally. He repeated his double engine, double zero jibe and questioned the source of Yogi Adityanath's missing-voters figure. The leaders demanded the removal of the Chief Election Commissioner.",
+  "source": "Leader Watch",
+  "time": "2026-11-01T13:45:00+05:30"
+ },
+ {
+  "title": "Owaisi stays away from rally",
+  "text": "AIMIM chief Asaduddin Owaisi did not join the opposition rally. Speaking in Bidar, he accused Congress of taking different positions on the voter-roll revision in different states.",
+  "source": "Leader Watch",
+  "time": "2026-11-01T13:45:00+05:30"
+ },
+ {
+  "title": "Harsh Sanghavi leads Run for Unity",
+  "text": "Gujarat Deputy Chief Minister Harsh Sanghavi took part in a Run for Unity in Dabhoi, Vadodara. No other major statements from him were reported today.",
+  "source": "Leader Watch",
+  "time": "2026-11-01T13:45:00+05:30"
+ },
+ {
+  "title": "Grid-down radio talk trends online",
+  "text": "Online discussion is growing about how families can communicate if the power grid fails. Users are comparing GMRS handhelds, amateur radio licences and satellite messengers.",
+  "source": "Boondocke SMM",
+  "time": "2026-11-01T09:00:00+05:30"
+ }
+]
