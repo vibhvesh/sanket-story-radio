@@ -1,5 +1,5 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Sanket Story Radio</title><link rel=preconnect href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Share+Tech+Mono&display=swap" rel=stylesheet><style>
+<title>Sanket News Radio</title><link rel=preconnect href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Share+Tech+Mono&display=swap" rel=stylesheet><style>
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;font-family:'Share Tech Mono',ui-monospace,monospace;color:#eee;-webkit-user-select:none;user-select:none;
  background:radial-gradient(circle at 15% 10%,#ff3d7f 0,transparent 40%),radial-gradient(circle at 90% 20%,#ffb800 0,transparent 35%),radial-gradient(circle at 50% 100%,#00c2ff 0,transparent 45%),linear-gradient(135deg,#2b0a5e,#0b1e4a 60%,#062a2a);background-attachment:fixed;padding:14px}
@@ -57,68 +57,76 @@ button{font-family:Orbitron,sans-serif;cursor:pointer;border:0;border-radius:10p
 </style>
 <style>
 #story{white-space:pre-wrap;font-family:system-ui,sans-serif;font-size:16px;line-height:1.5;max-height:42vh;overflow:auto;color:#eee;user-select:text;-webkit-user-select:text}
-#ptt2{width:100%;margin-top:14px;padding:26px;font-family:Orbitron,sans-serif;font-size:22px;border-radius:16px;border:3px solid #111;background:radial-gradient(#ff5a5a,#a00);color:#fff;touch-action:none}
-#ptt2.on{background:radial-gradient(#39ff88,#0a6);box-shadow:0 0 24px #39ff88}
+#story div{margin:0 0 6px;animation:fi .4s}@keyframes fi{from{opacity:0}}
 .ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ctl select,.ctl input,.ctl button{padding:8px;border-radius:8px;border:1px solid #555;background:#111;color:#eee;font-family:inherit}
 .ctl input{flex:1;min-width:140px}#note{font-size:11px;color:#ffd23f;min-height:14px;margin-top:4px}
+#seg{font-family:Orbitron;padding:2px 8px;border-radius:6px;background:#39ff88;color:#000}#seg.BREAKING{background:#ff2d2d;color:#fff;animation:pulse 1s infinite}#seg.STORY{background:#00c2ff}
+.tick{overflow:hidden;white-space:nowrap;margin-top:8px;background:#000;border:1px solid #333;border-radius:6px;padding:5px 0;color:#ffd23f;font-size:13px}.tick span{display:inline-block;padding-left:100%;animation:tk 120s linear infinite}@keyframes tk{to{transform:translateX(-100%)}}
 </style></head><body><div class=rig>
-<div class=brand><div><h1>SANKET STORY RADIO</h1><small>AI STORIES · ON AIR</small></div><div class=leds><div class="led pw"><i></i>PWR</div><div class="led rx" id=rxl><i></i>PLAY</div><div class="led tx" id=txl><i></i>REQ</div></div></div>
-<div class=lcd><div class=row><span id=chl>CH story-1</span><span id=eng>ENGINE free</span></div><div class=freq id=title>STORY RADIO</div><div id=st>Tap START to begin</div></div>
-<div class=panel><h3>NOW TELLING <span id=lang2></span></h3><div id=story>Press START. Stories play automatically. Hold the button and ask for a story, or type below.</div></div>
+<div class=brand><div><h1>SANKET NEWS RADIO</h1><small>NONSTOP NEWS · ON AIR</small></div><div class=leds><div class="led pw"><i></i>PWR</div><div class="led rx" id=rxl><i></i>AIR</div><div class="led tx" id=txl><i></i>BRK</div></div></div>
+<div class=lcd><div class=row><span id=seg>NEWS</span><span id=lang2></span></div><div class=freq id=title>NEWS RADIO</div><div id=st>Tap START to begin</div></div>
+<div class=tick><span id=tick>Loading headlines…</span></div>
+<div class=panel><h3>NOW PLAYING <span id=src></span></h3><div id=story>Press START once. The station runs nonstop: news bulletins, breaking alerts and stories.</div></div>
 <button id=start style="width:100%;margin-top:10px;padding:12px;font-family:Orbitron">▶ START RADIO</button>
-<button id=ptt2>HOLD · ASK FOR A STORY</button>
-<div class=ctl><input id=req placeholder="e.g. a brave dog / बहादुर कुत्ता"><button id=send>ASK</button><button id=skip>⏭ SKIP</button></div>
-<div id=note></div>
+<div class=ctl><button id=skip>⏭ SKIP</button></div><div id=note></div>
 <div class=panel><h3>SETTINGS</h3><div class=ctl>
 <select id=lang><option value=en>English</option><option value=hi>हिन्दी Hindi</option></select>
-<select id=engine><option value=grok>Grok (xAI)</option><option value=openai>ChatGPT (OpenAI)</option><option value=free>Free (Pollinations, no key)</option></select>
-<input id=ch placeholder="channel" value="story-1"><label style="font-size:12px"><input type=checkbox id=bc> share over channel</label></div>
+<select id=engine><option value=none>Narrate raw (no AI)</option><option value=grok>Grok (xAI) rewrite</option><option value=openai>ChatGPT rewrite</option></select></div>
 <div class=ctl><input id=kx type=password placeholder="xAI API key (stored only in this browser)"><input id=ko type=password placeholder="OpenAI API key (stored only in this browser)"></div></div>
 </div>
-<script src="https://unpkg.com/mqtt@5/dist/mqtt.min.js"></script>
 <script>
-const $=id=>document.getElementById(id),LS=localStorage;
-const PFX='sanket-story-radio-5c1e/';
-['lang','engine','ch','kx','ko'].forEach(k=>{if(LS['ssr_'+k])$(k).value=LS['ssr_'+k];$(k).onchange=()=>{LS['ssr_'+k]=$(k).value;upd();if(k=='ch')sub()}});
-$('bc').checked=LS.ssr_bc==='1';$('bc').onchange=()=>{LS.ssr_bc=$('bc').checked?'1':'0'};
-if(!LS.ssr_engine)$('engine').value='free';
-function upd(){$('eng').textContent='ENGINE '+$('engine').value;$('chl').textContent='CH '+$('ch').value;$('lang2').textContent=$('lang').value.toUpperCase()}upd();
-const note=t=>{$('note').textContent=t||''};
-const FALL={en:[["The Brave Little Dog","Bruno was a small brown dog who lived at the edge of a quiet village. One rainy evening he heard a tiny kitten crying from a drain. Bruno was scared of the rushing water, but he took a deep breath, barked loudly for help and stayed beside the kitten until the farmer came with a ladder. The kitten was saved, and from that day the two were best friends. Bruno learned that being brave does not mean you are never scared; it means you help even when you are. The end."],["The Moon's Lost Smile","One night the Moon forgot how to smile. The stars tried jokes, the owls sang songs, but nothing worked. Then a little girl named Asha looked up from her window and waved. She drew a big smiling moon on paper and held it up to the sky. The Moon saw it and laughed so brightly that the whole village glowed silver. Asha learned that a small kind act can light up the world. The end."],["Tiko the Turtle","Tiko the turtle wanted to see the mountain top. Everyone said he was too slow. Tiko walked a little every day, resting under trees and making friends with ants, birds and a sleepy bear. After many days he reached the top and saw the sunrise over the whole forest. His friends cheered for him. Slow and steady, Tiko showed that patience can take you anywhere. The end."]],
-hi:[["बहादुर कुत्ता","गाँव के किनारे ब्रूनो नाम का एक छोटा भूरा कुत्ता रहता था। एक बारिश वाली शाम उसने नाले में एक छोटे बिल्ली के बच्चे को रोते सुना। ब्रूनो पानी से डरता था, पर उसने गहरी साँस ली, ज़ोर से भौंककर मदद बुलाई और किसान के आने तक बिल्ली के पास रहा। बिल्ली बच गई और दोनों पक्के दोस्त बन गए। ब्रूनो ने सीखा कि बहादुरी का मतलब डर न होना नहीं, बल्कि डर के बावजूद मदद करना है। समाप्त।"],["चाँद की मुस्कान","एक रात चाँद मुस्कुराना भूल गया। तारों ने चुटकुले सुनाए, उल्लुओं ने गाने गाए, पर कुछ नहीं हुआ। तभी आशा नाम की एक छोटी लड़की ने खिड़की से हाथ हिलाया और कागज़ पर मुस्कुराता चाँद बनाकर आसमान को दिखाया। चाँद इतनी ज़ोर से हँसा कि पूरा गाँव चाँदी-सा चमक उठा। आशा ने सीखा कि छोटी-सी भलाई दुनिया रोशन कर सकती है। समाप्त।"],["धीमा कछुआ टीको","टीको कछुआ पहाड़ की चोटी देखना चाहता था। सबने कहा तुम बहुत धीमे हो। टीको रोज़ थोड़ा-थोड़ा चलता, पेड़ों के नीचे आराम करता और चींटियों, चिड़ियों और एक नींद वाले भालू से दोस्ती करता। कई दिनों बाद वह चोटी पर पहुँचा और पूरे जंगल पर सूरज उगते देखा। धीरे-धीरे पर लगातार चलकर टीको ने दिखाया कि धैर्य कहीं भी ले जा सकता है। समाप्त।"]]};
-const TOP={en:['a curious robot','a kind elephant','a magic kite','a lost star','a clever monkey','a friendly dragon','a rainbow fish','a little train'],hi:['एक जिज्ञासु रोबोट','एक दयालु हाथी','एक जादुई पतंग','एक खोया तारा','एक चतुर बंदर','एक दोस्ताना ड्रैगन','एक रंगीन मछली','एक छोटी रेलगाड़ी']};
-function prompt(topic,lang){return 'You are a gentle storyteller for young children (age 4-10). Write ONE original, completely kid-safe story (no violence, fear, romance, brands or unsafe content) about: "'+topic.slice(0,200)+'". Length 150-230 words (about 1-2 minutes read aloud). Language: '+(lang=='hi'?'simple Hindi in Devanagari script':'simple English')+'. First line: a short title only. Then the story. End with a gentle happy ending. No markdown, no asterisks.'}
-async function chat(url,key,model,p){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify({model,messages:[{role:'user',content:p}],temperature:0.9})});if(!r.ok)throw Error(r.status);const j=await r.json();return j.choices[0].message.content}
-async function free(p){const ctl=new AbortController();setTimeout(()=>ctl.abort(),45000);const r=await fetch('https://text.pollinations.ai/'+encodeURIComponent(p)+'?seed='+Math.floor(Math.random()*1e6),{signal:ctl.signal});if(!r.ok)throw Error(r.status);const t=await r.text();if(t.length<80||/^\s*[{<]/.test(t))throw Error('bad');return t}
-async function gen(topic,lang){note("");const p=prompt(topic,lang),e=$('engine').value;let t;
- try{if(e=='grok'){if(!$('kx').value)throw Error('no xAI key');t=await chat('https://api.x.ai/v1/chat/completions',$('kx').value.trim(),'grok-3-mini',p)}
-  else if(e=='openai'){if(!$('ko').value)throw Error('no OpenAI key');t=await chat('https://api.openai.com/v1/chat/completions',$('ko').value.trim(),'gpt-4o-mini',p)}}
- catch(x){note('⚠ '+e+' failed ('+x.message+') — using free engine')}
- if(!t){try{t=await free(p)}catch(x){for(let i=0;i<2&&!t;i++){$('st').textContent='⏳ free engine busy, retrying…';await new Promise(r=>setTimeout(r,16000));try{t=await free(p)}catch(y){}}}}
- if(!t){{note($('note').textContent+' ⚠ free engine failed — playing a built-in story');const f=FALL[lang][Math.floor(Math.random()*3)];return {title:f[0],text:f[1]}}}
- t=t.replace(/[*#_]/g,'').trim();const ls=t.split('\n').filter(s=>s.trim());return {title:ls[0].replace(/^title:\s*/i,'').slice(0,60),text:ls.slice(1).join('\n\n')||ls[0]}}
-let running=false,queue=[],speaking=false,busy=false;
+const $=id=>document.getElementById(id),LS=localStorage,sleep=ms=>new Promise(r=>setTimeout(r,ms));
+['lang','engine','kx','ko'].forEach(k=>{if(LS['snr_'+k])$(k).value=LS['snr_'+k];$(k).onchange=()=>{LS['snr_'+k]=$(k).value;upd()}});
+function upd(){$('lang2').textContent=$('lang').value.toUpperCase()}upd();
+const note=t=>$('note').textContent=t;
+const PROX=[u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u)];
+let pi=0;
+async function tget(u,ms=12000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw Error(r.status);return await r.text()}finally{clearTimeout(t)}}
+async function proxied(u){for(let i=0;i<PROX.length;i++){const k=(pi+i)%PROX.length;try{const t=await tget(PROX[k](u));if(t.includes('<item>')){pi=k;return t}}catch(e){}}throw Error('all proxies failed')}
+const strip=h=>{const d=document.createElement('div');d.innerHTML=h||'';return d.textContent.replace(/\s+/g,' ').trim()};
+function feeds(l){const q=l=='hi'?'hl=hi&gl=IN&ceid=IN:hi':'hl=en-IN&gl=IN&ceid=IN:en',b='https://news.google.com/rss';return[b+'?'+q,b+'/headlines/section/topic/NATION?'+q,b+'/headlines/section/topic/WORLD?'+q,b+'/search?q='+(l=='hi'?'राजनीति':'politics+India')+'&'+q]}
+let seen=new Set(JSON.parse(LS.snr_seen||'[]')),news=[],breakQ=[],first=true;
+async function refresh(){const l=$('lang').value;let got=[];
+ const rs=await Promise.allSettled(feeds(l).map(proxied));
+ rs.forEach(r=>{if(r.status!='fulfilled')return;const x=new DOMParser().parseFromString(r.value,'text/xml');x.querySelectorAll('item').forEach(i=>{let t=i.querySelector('title')?.textContent||'',s=i.querySelector('source')?.textContent||'';t=t.replace(/ - [^-]+$/,'');let d=strip(i.querySelector('description')?.textContent).replace(t,'').replace(s,'').trim();got.push({title:t,src:s,sum:d.length>40?d:'',date:new Date(i.querySelector('pubDate')?.textContent||0).getTime(),lang:l})})});
+ if(!got.length){try{const n=new Date(),j=JSON.parse(await tget(`https://en.wikipedia.org/api/rest_v1/feed/featured/${n.getFullYear()}/${String(n.getMonth()+1).padStart(2,'0')}/${String(n.getDate()).padStart(2,'0')}`));(j.news||[]).forEach(x=>got.push({title:strip(x.story),src:'Wikipedia In the news',sum:'',date:0,lang:'en'}))}catch(e){}}
+ if(!got.length){got=JSON.parse(LS.snr_cache||'[]');note('Offline: replaying cached headlines')}else{note('Headlines updated '+new Date().toLocaleTimeString()+' via '+(rs.some(r=>r.status=='fulfilled')?'Google News':'Wikipedia'));LS.snr_cache=JSON.stringify(got.slice(0,60))}
+ const u=new Map();got.forEach(g=>{if(!u.has(g.title))u.set(g.title,g)});got=[...u.values()].sort((a,b)=>b.date-a.date);news=got;
+ $('tick').textContent=got.slice(0,25).map(g=>'◆ '+g.title+(g.src?' ('+g.src+')':'')).join('   ');
+ if(!first)got.forEach(g=>{if(!seen.has(g.title)&&(/breaking|just in|\blive\b|ब्रेकिंग|लाइव/i.test(g.title)||Date.now()-g.date<20*60e3))breakQ.push(g)});
+ got.forEach(g=>seen.add(g.title));LS.snr_seen=JSON.stringify([...seen].slice(-500));first=false;
+ if(breakQ.length&&cur&&cur.seg!='BREAKING')interrupt()}
+async function story(){const l=$('lang').value,wl=l=='hi'?'hi':'en',n=new Date(),mm=String(n.getMonth()+1).padStart(2,'0'),dd=String(n.getDate()).padStart(2,'0');let s;
+ try{if(Math.random()<.6){const j=JSON.parse(await tget(`https://${wl}.wikipedia.org/api/rest_v1/feed/onthisday/events/${mm}/${dd}`));const e=j.events[Math.floor(Math.random()*j.events.length)];const p=e.pages?.[0];
+   s={title:(l=='hi'?'आज के दिन, ':'On this day in ')+e.year,text:e.text+' '+(p?.extract||'')}}
+  else{const j=JSON.parse(await tget('https://'+wl+'.wikipedia.org/api/rest_v1/page/random/summary'));if(j.extract.length<200&&wl=='en'){const f=JSON.parse(await tget(`https://en.wikipedia.org/api/rest_v1/feed/featured/${n.getFullYear()}/${mm}/${dd}`));s={title:'Featured story: '+f.tfa.titles.normalized,text:f.tfa.extract}}else s={title:(l=='hi'?'कहानी: ':'Story: ')+j.title,text:j.extract}}
+  s.text=await rewrite(s.title,s.text,l);const c=JSON.parse(LS.snr_stories||'[]');c.unshift(s);LS.snr_stories=JSON.stringify(c.slice(0,20))}
+ catch(e){const c=JSON.parse(LS.snr_stories||'[]');s=c[Math.floor(Math.random()*c.length)]||{title:'Station note',text:'We are having trouble reaching our sources. Stay tuned, more news is coming up shortly.'}}
+ return {seg:'STORY',title:s.title,src:'Wikipedia',text:s.text,lang:l}}
+async function rewrite(title,text,l){const e=$('engine').value;const p='Rewrite as a 1-2 minute radio narration (180-260 words), engaging, factual, no markdown. Language: '+(l=='hi'?'Hindi (Devanagari)':'English')+'. Topic: '+title+'. Facts: '+text.slice(0,2500);
+ try{let url,key,model;if(e=='grok'&&$('kx').value){url='https://api.x.ai/v1/chat/completions';key=$('kx').value.trim();model='grok-3-mini'}else if(e=='openai'&&$('ko').value){url='https://api.openai.com/v1/chat/completions';key=$('ko').value.trim();model='gpt-4o-mini'}else return text;
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},body:JSON.stringify({model,messages:[{role:'user',content:p}]})});if(!r.ok)throw 0;return (await r.json()).choices[0].message.content.replace(/[*#]/g,'')}catch(x){return text}}
+function bulletin(){const l=$('lang').value,its=news.slice(0,6);if(!its.length)return null;news=news.slice(6).concat(its);
+ const hi=l=='hi';return{seg:'NEWS',title:hi?'समाचार बुलेटिन':'News bulletin',src:'Google News',lang:l,text:(hi?'अब सुनिए ताज़ा समाचार। ':'Here are the latest headlines. ')+its.map(g=>g.title+(/[.!?।]$/.test(g.title)?' ':'. ')+(g.sum?g.sum+' ':'')+(g.src?(hi?'स्रोत: ':'Reported by ')+g.src+'. ':'')).join('')}}
 function voiceFor(l){const v=speechSynthesis.getVoices();return v.find(x=>x.lang.startsWith(l=='hi'?'hi':'en-IN'))||v.find(x=>x.lang.startsWith(l))}
-function speak(s){return new Promise(res=>{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s.title+'. '+s.text);u.lang=s.lang=='hi'?'hi-IN':'en-IN';const v=voiceFor(s.lang);if(v)u.voice=v;u.rate=.95;let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;
- setTimeout(fin,Math.max(20000,s.text.length*90));speechSynthesis.speak(u)})}
-async function loop(){while(running){let s=queue.shift();if(!s){busy=true;$('st').textContent='✍ writing a story…';const l=$('lang').value;s=await gen(TOP[l][Math.floor(Math.random()*8)],l);s.lang=l;busy=false;if(queue.length){queue.push(s);continue}}
- show(s);if($('bc').checked&&!s.remote)pub(s);$('rxl').classList.add('on');speaking=true;await speak(s);speaking=false;$('rxl').classList.remove('on');await new Promise(r=>setTimeout(r,1500))}}
-function show(s){$('title').textContent=s.title.toUpperCase();$('story').textContent=s.title+'\n\n'+s.text;$('st').textContent=(s.req?'🎙 by request: '+s.req:'📻 on air')+(s.remote?' (from channel)':'')}
-async function request(q){q=(q||'').trim();if(!q)return;const l=$('lang').value;$('st').textContent='✍ writing your story: '+q;note('');while(busy)await new Promise(r=>setTimeout(r,500));busy=true;const s=await gen(q,l);busy=false;s.lang=l;s.req=q;queue.unshift(s);
- if(!running){running=true;loop()}else{speechSynthesis.cancel()} return s}
-window.request=request;
-$('start').onclick=()=>{if(running){running=false;speechSynthesis.cancel();$('start').textContent='▶ START RADIO';$('st').textContent='stopped';return}running=true;$('start').textContent='■ STOP RADIO';loop()};
-$('send').onclick=()=>{request($('req').value);$('req').value=''};$('req').onkeydown=e=>{if(e.key=='Enter')$('send').click()};
-$('skip').onclick=()=>speechSynthesis.cancel();
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec,heard='';
-function down(e){e.preventDefault();if(!SR){note('Speech recognition not supported here — type your request below');$('req').focus();return}
- speechSynthesis.pause();heard='';rec=new SR();rec.lang=$('lang').value=='hi'?'hi-IN':'en-IN';rec.interimResults=true;rec.onresult=ev=>{heard=[...ev.results].map(r=>r[0].transcript).join(' ');$('st').textContent='🎙 '+heard};
- rec.onerror=ev=>note('mic: '+ev.error+' — type your request below');rec.onend=()=>{speechSynthesis.resume();if(heard)request(heard)};try{rec.start()}catch(x){}$('ptt2').classList.add('on');$('txl').classList.add('on');$('st').textContent='🎙 listening…'}
-function up(){$('ptt2').classList.remove('on');$('txl').classList.remove('on');if(rec)try{rec.stop()}catch(x){}}
-$('ptt2').addEventListener('pointerdown',down);['pointerup','pointerleave','pointercancel'].forEach(t=>$('ptt2').addEventListener(t,up));
-let cli,cur;const me=Math.random().toString(36).slice(2,8);
-function sub(){if(!cli)return;if(cur)cli.unsubscribe(cur);cur=PFX+$('ch').value+'/story';cli.subscribe(cur)}
-function pub(s){if(cli&&cli.connected)cli.publish(PFX+$('ch').value+'/story',JSON.stringify({from:me,title:s.title,text:s.text,lang:s.lang,req:s.req}))}
-try{cli=mqtt.connect('wss://public.cloud.shiftr.io',{username:'public',password:'public',clientId:'ssr-'+me});cli.on('connect',sub);
- cli.on('message',(t,m)=>{try{const j=JSON.parse(m);if(j.from==me||!j.text)return;j.remote=true;j.title=String(j.title).slice(0,80);j.text=String(j.text).slice(0,4000);queue.push(j);if(!speaking&&running)speechSynthesis.cancel()}catch(x){}})}catch(x){}
+const sents=t=>(t.match(/[^.!?।]+[.!?।]+["')\]]*|[^.!?।]+$/g)||[t]).map(s=>s.trim()).filter(s=>s.length>1);
+let running=false,cur=null,tok=0,ctx;
+function tone(br){try{ctx=ctx||new AudioContext();(br?[880,660,880,660]:[523,659,784]).forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;o.connect(g);g.connect(ctx.destination);const t=ctx.currentTime+i*.22;g.gain.setValueAtTime(.2,t);g.gain.exponentialRampToValueAtTime(.001,t+.2);o.start(t);o.stop(t+.21)})}catch(e){}}
+function say(s,l,k){return new Promise(res=>{if(k!=tok)return res();const u=new SpeechSynthesisUtterance(s);u.lang=l=='hi'?'hi-IN':'en-IN';const v=voiceFor(l);if(v)u.voice=v;u.rate=.95;let d=0;const f=()=>{if(!d){d=1;clearTimeout(w);res()}};u.onend=f;u.onerror=f;const w=setTimeout(f,4000+s.length*120);speechSynthesis.speak(u)})}
+async function play(it){const k=++tok;cur=it;$('seg').textContent=it.seg;$('seg').className=it.seg;$('title').textContent=it.title.toUpperCase();$('src').textContent=it.src||'';$('txl').classList.toggle('on',it.seg=='BREAKING');$('st').textContent='📻 on air';
+ tone(it.seg=='BREAKING');await sleep(900);$('story').innerHTML='';const add=t=>{const d=document.createElement('div');d.textContent=t;$('story').appendChild(d);$('story').scrollTop=1e9};
+ for(const s of sents(it.title+'. '+it.text)){if(k!=tok||!running)return false;add(s);await say(s,it.lang,k);for(let i=0;i<30&&k==tok&&running;i++)await sleep(100)}return k==tok}
+function interrupt(){tok++;speechSynthesis.cancel()}
+const ID={en:'You are listening to Sanket News Radio. Nonstop news and stories, all day.',hi:'आप सुन रहे हैं संकेत न्यूज़ रेडियो। लगातार समाचार और कहानियाँ।'};
+let nextStory=null;const prep=()=>{nextStory=story()};
+async function loop(){let step=0;prep();while(running){if(breakQ.length){const g=breakQ.shift(),hi=$('lang').value=='hi';await play({seg:'BREAKING',title:hi?'ब्रेकिंग न्यूज़':'Breaking news',src:g.src,lang:g.lang,text:(hi?'हम यह खबर बीच में रोककर दे रहे हैं। ':'We interrupt this programme with breaking news. ')+g.title+'. '+(g.sum||'')+(hi?' अब हम कार्यक्रम पर लौटते हैं।':' We now return to our programme.')});continue}
+ const p=step%3;let it;if(p==0)it={seg:'NEWS',title:'Station ID',src:'',lang:$('lang').value,text:ID[$('lang').value]};else if(p==1)it=bulletin()||await nextStory;else{it=await nextStory;prep()}
+ const ok=await play(it);if(ok||!running||p==0)step++;else if(p==2){/* interrupted story: resume by replaying */}}}
+$('start').onclick=async()=>{if(running){running=false;interrupt();$('start').textContent='▶ START RADIO';$('rxl').classList.remove('on');return}
+ running=true;$('start').textContent='■ STOP';$('rxl').classList.add('on');speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+ try{await navigator.wakeLock?.request('screen')}catch(e){}document.addEventListener('visibilitychange',()=>{if(running&&document.visibilityState=='visible')navigator.wakeLock?.request('screen').catch(()=>{})});
+ $('st').textContent='Tuning in…';await refresh();loop()};
+$('skip').onclick=()=>{tok++;speechSynthesis.cancel()};
+$('lang').addEventListener('change',()=>{first=true;refresh()});
+setInterval(()=>{if(running)refresh()},180e3);refresh();
 </script></body></html>
